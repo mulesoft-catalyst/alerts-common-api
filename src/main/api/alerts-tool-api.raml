@@ -1,0 +1,39 @@
+#%RAML 1.0
+baseUri: http://localhost:8081 # 
+title: Alerts Tool API
+description: API that provides a canonical model for generating Alerts
+version: v1
+mediaType: application/json
+protocols: 
+  - HTTPS
+
+documentation: 
+  - !include documentation/alerts-tool-api-documentation.raml
+
+types: 
+  Alert: !include data-types/alert-data-type.raml
+ 
+
+traits:
+  client-errors: !include traits/client-error-codes-trait.raml
+  server-errors: !include traits/server-error-codes-trait.raml
+
+/alerts:
+  displayName: Alerts
+  description: |
+    Working with alerts:
+    * Creating a new alert
+  post:
+    is: [client-errors, server-errors]
+    displayName: Post alerts
+    description: Creates a new alert
+    body: 
+      application/json:
+        type: Alert
+        example: !include examples/post-alert-example.raml
+    responses: 
+      201:
+        description: Alert created
+        body: 
+          application/json:
+            example: {"message": "Alert successfully created"}

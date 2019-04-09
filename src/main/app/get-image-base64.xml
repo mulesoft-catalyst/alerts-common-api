@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+	
+	<http:request-config name="http-request-configuration" host="#[flowVars.host]" port="#[flowVars.port]" doc:name="HTTP Request Configuration" />
+	<http:request-config name="https-request-configuration" host="#[flowVars.host]" port="#[flowVars.port]" doc:name="HTTPS Request Configuration"
+		protocol="HTTPS" />
+
+	<flow name="get-image-flow">
+		<expression-component doc:name="Decompose Image URL Expression" file="scripting/url-decomposer.script"></expression-component>
+		<choice doc:name="Choice">
+			<when expression="#[flowVars.protocol == 'https']">
+				<set-variable variableName="port" value="#[flowVars.port == -1? 443 : flowVars.port]" doc:name="Fix port" />
+				<http:request config-ref="https-request-configuration" path="#[flowVars.path]" method="GET" doc:name="HTTPS - GET Image" />
+			</when>
+			<otherwise>
+				<set-variable variableName="port" value="#[flowVars.port == -1? 80 : flowVars.port]" doc:name="Fix port" />
+				<http:request config-ref="http-request-configuration" path="#[flowVars.path]" method="GET" doc:name="HTTP - GET Image" />
+			</otherwise>
+		</choice>
+		<object-to-byte-array-transformer doc:name="Object to Byte Array" />
+		<set-payload doc:name="Encode the Byte Array payload and return it as Base64 String" value="#[org.apache.commons.codec.binary.Base64.encodeBase64String(payload)]" />
+	</flow>
+
+</mule>

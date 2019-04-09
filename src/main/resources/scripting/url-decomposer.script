@@ -1,0 +1,6 @@
+java.net.URL aURL = new java.net.URL(payload.imageLink);
+flowVars.path = aURL.getPath();
+flowVars.basePath =  path.substring(0,org.apache.commons.lang3.StringUtils.ordinalIndexOf(path, "/", 2));
+flowVars.host = aURL.getHost();
+flowVars.protocol = aURL.getProtocol();
+flowVars.port = aURL.getPort();

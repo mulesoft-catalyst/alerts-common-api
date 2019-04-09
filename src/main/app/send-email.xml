@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:core="http://www.mulesoft.org/schema/mule/core" xmlns:smtps="http://www.mulesoft.org/schema/mule/smtps" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smtp/current/mule-smtp.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/smtps http://www.mulesoft.org/schema/mule/smtps/current/mule-smtps.xsd">
+    <sub-flow name="config-email-sub-flow">
+        <component class="com.mulesoft.services.ImageAttacher" doc:name="Set Attachment"/>
+        <set-property propertyName="subject" value="#[payload.level + &quot;:&quot; + payload.name]" doc:name="Set Subject"/>
+        <set-variable variableName="receipts" value="#[org.apache.commons.lang3.StringUtils.join(payload.receipts,',')]" doc:name="Set Receipts"/>
+        <parse-template location="email.html" doc:name="Parse HTML Template"/>
+    </sub-flow>
+	
+	<flow name="send-email-flow">
+		<dw:transform-message doc:name="Transform JSON to JAVA">
+			<dw:set-payload resource="classpath:dw/transform-json-to-java.dwl" />
+		</dw:transform-message>
+		<enricher target="#[flowVars.imageData]" doc:name="Message Enricher">
+			<flow-ref name="get-image-flow" doc:name="Get Image Flow Reference" />
+		</enricher>
+        <flow-ref name="config-email-sub-flow" doc:name="Config email attributes"/>
+        <smtp:outbound-endpoint host="${smtp.host}" port="${smtp.port}" user="${smtp.user}" password="${smtp.password}" connector-ref="SMTP" to="#[flowVars.receipts]" from="${smtp.from}" responseTimeout="10000" doc:name="Send email - SMTP">
+            <property key="mail.smtp.starttls.enable" value="true"/>
+        </smtp:outbound-endpoint>
+        <logger message="message sent successfully" level="INFO" doc:name="Logger"/>
+        <remove-attachment attachmentName="imageAttachment" doc:name="Remove Attachments"/>
+		<dw:transform-message doc:name="Build Response Message">
+			<dw:set-payload resource="classpath:dw/build-response-message.dwl" />
+		</dw:transform-message>
+	</flow>
+</mule>

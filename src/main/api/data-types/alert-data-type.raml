@@ -1,0 +1,45 @@
+#%RAML 1.0 DataType
+displayName: Alert
+description: Alert Object
+type: object
+properties: 
+  name: 
+    description: The name of the alert 
+    type: string
+    required: true
+  description: 
+    description: Brief description of the alert
+    type: string
+    required: true
+  level: 
+    description: 
+    enum: ["INFO", "WARNING", "ERROR", "FATAL"]
+    required: true
+  date:
+    description: Date and Time
+    type: datetime
+    required: true
+  message: 
+    description: Complete message for the alert
+    type: string
+    required: true
+  receipts: 
+    description: List of receipts
+    type: string []
+    required: true
+  applicationName: 
+    description: Application Name
+    type: string
+    required: true
+  environment: 
+    description: Environment Name
+    enum: ["DEV", "QA", "STAGE", "PROD"]
+    required: true
+  documentationLink: 
+    description: Documentation link
+    type: string
+    required: false
+  imageLink: 
+    description: Image link 
+    type: string
+    required: false
